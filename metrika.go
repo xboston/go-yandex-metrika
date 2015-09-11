@@ -23,6 +23,7 @@ type Metrika struct {
 	Code  string
 
 	UserAgent string
+	Debug     bool
 }
 
 // тут еще задавать httpClient
@@ -38,8 +39,15 @@ func NewMetrika(clientId, clientSecret, username, password, token, code string) 
 	}
 
 	//metrika.UserAgent = "YametrikaGo"
+	//metrika.Debug = false
 
 	return
+}
+
+// активация отладки
+func (this *Metrika) SetDebug(flag bool) {
+
+	this.Debug = flag
 }
 
 // обработка результатов авторизации
@@ -64,6 +72,10 @@ func (this *Metrika) authorizeHandle(resultBody []byte) (err error) {
 
 // авторизация
 func (this *Metrika) Authorize() (err error) {
+
+	if this.Token != "" {
+		return
+	}
 
 	params := url.Values{"client_id": {this.ClientID}, "client_secret": {this.ClientSecret}}
 
@@ -113,7 +125,9 @@ func (this *Metrika) getURI(methodname, id string, params url.Values) (uri strin
 
 	uri = fmt.Sprintf("%s%s.json", HOST, methodname)
 
-	log.Println(uri)
+	if this.Debug {
+		log.Println(uri)
+	}
 
 	if id != "" {
 		uri = fmt.Sprintf(uri, id)
@@ -123,7 +137,9 @@ func (this *Metrika) getURI(methodname, id string, params url.Values) (uri strin
 		uri = fmt.Sprintf("%s?%s", uri, params.Encode())
 	}
 
-	log.Println(uri)
+	if this.Debug {
+		log.Println(uri)
+	}
 
 	return uri
 }

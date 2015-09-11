@@ -1,17 +1,3 @@
-yametrikago
-===========
-
-Библиотека работает только с JSON форматом.
-
-Для работы необходим логин с паролем, код или токен (oauth_token).
-
-Необходимые для работы параметры можно получить зарегистрировав приложение вот тут https://oauth.yandex.ru/client/new
-
-Пример использования
---------------------
-
-```
-
 package main
 
 import (
@@ -52,8 +38,28 @@ func main() {
 	PanicIfErr(err)
 
 	Debug(counterList)
+
+	counterId := counterList.Counters[0].ID
+
+	counterData, err := metrika.GetCounter(counterId)
+	PanicIfErr(err)
+
+	Debug(counterData)
+
+	statTrafficSummary, err := metrika.GetStatTrafficSummary(counterId)
+	PanicIfErr(err)
+
+	Debug(statTrafficSummary.Data[6])
+
+	log.Println("Finish")
 }
-```
 
+func PanicIfErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
-Основано на проекте yametrikapy: https://github.com/pikhovkin/yametrikapy/blob/master/yametrikapy/core.py
+func Debug(data interface{}) {
+	fmt.Printf("%#v", data)
+}
