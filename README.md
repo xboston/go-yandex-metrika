@@ -1,24 +1,25 @@
-yametrikago
-===========
+go-yandex-metrika
+=================
 
-Библиотека работает только с JSON форматом.
+Библиотека для Go, работающая с API Yandex Метрики.
 
 Для работы необходим логин с паролем, код или токен (oauth_token).
 
-Необходимые для работы параметры можно получить зарегистрировав приложение вот тут https://oauth.yandex.ru/client/new
+Необходимые для работы параметры можно получить зарегистрировав приложение вот тут https://oauth.yandex.ru/client/new.
+Как получить отладочный токен рассказано тут https://tech.yandex.ru/oauth/doc/dg/tasks/get-oauth-token-docpage/
+
+Библиотека работает только с JSON форматом.
 
 Пример использования
 --------------------
 
-```
-
+```go
 package main
 
 import (
-	"fmt"
 	"log"
 
-	Metrika "github.com/xboston/yametrikago"
+	metrika "github.com/xboston/go-yandex-metrika"
 )
 
 func main() {
@@ -26,32 +27,22 @@ func main() {
 	log.Println("Start")
 
 	var (
-		clientId, clientSecret, username, password, token, code string
-		err                                                     error
+		clientID, clientSecret, username, password, token, code string
 	)
 
-	//
-	clientId = ""
-	clientSecret = ""
-	username = ""
-	password = ""
-
-	//
-	code = ""
-
-	// при указании токена остальные параметры не обязательны
 	token = ""
 
-	metrika := Metrika.NewMetrika(clientId, clientSecret, username, password, token, code)
+	metrika := metrika.NewMetrika(clientID, clientSecret, username, password, token, code)
 	metrika.SetDebug(true)
 
-	err = metrika.Authorize()
-	PanicIfErr(err)
+	metrika.Authorize()
+	counterList, _ := metrika.GetCounterList()
 
-	counterList, err := metrika.GetCounterList()
-	PanicIfErr(err)
+	for _, counter := range counterList.Counters {
+		log.Println(counter.ID, counter.Name, counter.Site)
+	}
 
-	Debug(counterList)
+	log.Println("Finish")
 }
 ```
 
