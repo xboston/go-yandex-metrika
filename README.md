@@ -33,7 +33,6 @@ func main() {
 	metrika := metrika.NewMetrikaFromToken(token)
 	metrika.SetDebug(true)
 
-	metrika.Authorize()
 	counterList, _ := metrika.GetCounterList()
 
 	for _, counter := range counterList.Counters {
