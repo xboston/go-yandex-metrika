@@ -10,8 +10,11 @@ import (
 	"net/url"
 )
 
-var httpClient = http.DefaultClient
+var (
+	httpClient = http.DefaultClient
+)
 
+// Metrika - основеой объект работы с метрикой
 type Metrika struct {
 	ClientID     string
 	ClientSecret string
@@ -26,11 +29,31 @@ type Metrika struct {
 	Debug     bool
 }
 
-// тут еще задавать httpClient
-func NewMetrika(clientId, clientSecret, username, password, token, code string) (metrika Metrika) {
+// NewMetrikaFromToken - создание инстанции с токеном доступа
+func NewMetrikaFromToken(token string) (metrika Metrika) {
 
 	metrika = Metrika{
-		ClientID:     clientId,
+		Token: token,
+	}
+
+	return
+}
+
+// NewMetrikaFromCode - создание инстанции с кодом доступа
+func NewMetrikaFromCode(code string) (metrika Metrika) {
+
+	metrika = Metrika{
+		Code: code,
+	}
+
+	return
+}
+
+// NewMetrika - создание инстанции
+func NewMetrika(clientID, clientSecret, username, password, token, code string) (metrika Metrika) {
+
+	metrika = Metrika{
+		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Username:     username,
 		Password:     password,
@@ -38,26 +61,23 @@ func NewMetrika(clientId, clientSecret, username, password, token, code string) 
 		Code:         code,
 	}
 
-	//metrika.UserAgent = "YametrikaGo"
-	//metrika.Debug = false
-
 	return
 }
 
-// активация отладки
-func (this *Metrika) SetDebug(flag bool) {
+// SetDebug - включение-выключение отладки
+func (m *Metrika) SetDebug(flag bool) {
 
-	this.Debug = flag
+	m.Debug = flag
 }
 
 // обработка результатов авторизации
-func (this *Metrika) authorizeHandle(resultBody []byte) (err error) {
+func (m *Metrika) authorizeHandle(resultBody []byte) (err error) {
 
 	var tokenResult ResultToken
 
 	if err := json.Unmarshal(resultBody, &tokenResult); err == nil && tokenResult.AccessToken != "" {
 
-		this.Token = tokenResult.AccessToken
+		m.Token = tokenResult.AccessToken
 		return nil
 	}
 
@@ -70,24 +90,28 @@ func (this *Metrika) authorizeHandle(resultBody []byte) (err error) {
 	return errors.New("Error authorizeHandle")
 }
 
-// авторизация
-func (this *Metrika) Authorize() (err error) {
+// Authorize - авторизация
+func (m *Metrika) Authorize() (err error) {
 
-	if this.Token != "" {
+	// при имеющемся токене все остальные движения не нужны
+	if m.Token != "" {
 		return
 	}
 
-	params := url.Values{"client_id": {this.ClientID}, "client_secret": {this.ClientSecret}}
+	params := url.Values{
+		"client_id":     {m.ClientID},
+		"client_secret": {m.ClientSecret},
+	}
 
-	if this.Code != "" {
+	if m.Code != "" {
 		// OAuth окно выдаёт этот самый code
 		params.Add("grant_type", "authorization_code")
-		params.Add("code", this.Code)
+		params.Add("code", m.Code)
 	} else {
 		// или через логин - пароль
 		params.Add("grant_type", "password")
-		params.Add("username", this.Username)
-		params.Add("password", this.Password)
+		params.Add("username", m.Username)
+		params.Add("password", m.Password)
 	}
 
 	resp, err := httpClient.PostForm(OAUTH_TOKEN, params)
@@ -102,30 +126,19 @@ func (this *Metrika) Authorize() (err error) {
 		return
 	}
 
-	err = this.authorizeHandle(body)
+	err = m.authorizeHandle(body)
 
 	return err
 }
 
-func (this *Metrika) Auth() (err error) {
+func (m *Metrika) getURI(methodname, id string, params url.Values) (uri string) {
 
-	if this.Token == "" {
-
-		err = this.Authorize()
-		return nil
-	}
-
-	return nil
-}
-
-func (this *Metrika) getURI(methodname, id string, params url.Values) (uri string) {
-
-	// его надо в Header указывать
-	params.Add("oauth_token", this.Token)
+	// можно и в Header указывать
+	params.Add("oauth_token", m.Token)
 
 	uri = fmt.Sprintf("%s%s.json", HOST, methodname)
 
-	if this.Debug {
+	if m.Debug {
 		log.Println(uri)
 	}
 
@@ -137,17 +150,17 @@ func (this *Metrika) getURI(methodname, id string, params url.Values) (uri strin
 		uri = fmt.Sprintf("%s?%s", uri, params.Encode())
 	}
 
-	if this.Debug {
+	if m.Debug {
 		log.Println(uri)
 	}
 
 	return uri
 }
 
-// список всех доступных счетчиков
-func (this *Metrika) GetCounterList() (counterList CounterList, err error) {
+// GetCounterList - список всех доступных счетчиков
+func (m *Metrika) GetCounterList() (counterList CounterList, err error) {
 
-	resp, err := httpClient.Get(this.getURI(_COUNTERS, "", url.Values{}))
+	resp, err := httpClient.Get(m.getURI(_COUNTERS, "", url.Values{}))
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -164,10 +177,10 @@ func (this *Metrika) GetCounterList() (counterList CounterList, err error) {
 	return counterList, err
 }
 
-// полная информация о счетчике
-func (this *Metrika) GetCounter(counterId string) (counterData CounterData, err error) {
+// GetCounter - полная информация о счетчике
+func (m *Metrika) GetCounter(counterID string) (counterData CounterData, err error) {
 
-	resp, err := httpClient.Get(this.getURI(_COUNTER, counterId, url.Values{}))
+	resp, err := httpClient.Get(m.getURI(_COUNTER, counterID, url.Values{}))
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -184,10 +197,10 @@ func (this *Metrika) GetCounter(counterId string) (counterData CounterData, err 
 	return counterData, err
 }
 
-// данные по трафику
-func (this *Metrika) GetStatTrafficSummary(counterId string) (statTraffic StatTraffic, err error) {
+// GetStatTrafficSummary - данные по трафику
+func (m *Metrika) GetStatTrafficSummary(counterID string) (statTraffic StatTraffic, err error) {
 
-	resp, err := http.Get(this.getURI(_STAT_TRAFFIC_SUMMARY, "", url.Values{"id": {counterId}}))
+	resp, err := http.Get(m.getURI(_STAT_TRAFFIC_SUMMARY, "", url.Values{"id": {counterID}}))
 	defer resp.Body.Close()
 
 	if err != nil {

@@ -10,13 +10,9 @@ func main() {
 
 	log.Println("Start")
 
-	var (
-		clientID, clientSecret, username, password, token, code string
-	)
+	token := ""
 
-	token = "398a167c1a864b06badf9f5e40bab675"
-
-	metrika := metrika.NewMetrika(clientID, clientSecret, username, password, token, code)
+	metrika := metrika.NewMetrikaFromToken(token)
 	metrika.SetDebug(true)
 
 	metrika.Authorize()
