@@ -67,6 +67,4 @@ const (
 	_STAT_TECH_JAVA        = _STAT_TECH + "/java"
 	_STAT_TECH_COOKIES     = _STAT_TECH + "/cookies"
 	_STAT_TECH_JAVASCRIPT  = _STAT_TECH + "/javascript"
-
-	_UserAgent = "yametrikago"
 )
