@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	httpClient = http.DefaultClient
+	httpClient = *http.DefaultClient
 )
 
 // Metrika - основеой объект работы с метрикой
@@ -30,38 +30,37 @@ type Metrika struct {
 }
 
 // NewMetrikaFromToken - создание инстанции с токеном доступа
-func NewMetrikaFromToken(token string) (metrika Metrika) {
+func NewMetrikaFromToken(token string) (metrika *Metrika) {
 
-	metrika = Metrika{
+	return &Metrika{
 		Token: token,
 	}
-
-	return
 }
 
 // NewMetrikaFromCode - создание инстанции с кодом доступа
-func NewMetrikaFromCode(code string) (metrika Metrika) {
+func NewMetrikaFromCode(code, clientID, clientSecret string) (metrika *Metrika) {
 
-	metrika = Metrika{
+	metrika = &Metrika{
 		Code: code,
+
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 	}
 
-	return
+	return metrika
 }
 
 // NewMetrika - создание инстанции
-func NewMetrika(clientID, clientSecret, username, password, token, code string) (metrika Metrika) {
+func NewMetrika(clientID, clientSecret, username, password string) (metrika *Metrika) {
 
-	metrika = Metrika{
+	metrika = &Metrika{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Username:     username,
 		Password:     password,
-		Token:        token,
-		Code:         code,
 	}
 
-	return
+	return metrika
 }
 
 // SetDebug - включение-выключение отладки
@@ -126,9 +125,7 @@ func (m *Metrika) Authorize() (err error) {
 		return
 	}
 
-	err = m.authorizeHandle(body)
-
-	return err
+	return m.authorizeHandle(body)
 }
 
 func (m *Metrika) getURI(methodname, id string, params url.Values) (uri string) {

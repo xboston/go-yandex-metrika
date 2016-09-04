@@ -6,7 +6,9 @@ go-yandex-metrika
 Для работы необходим логин с паролем, код или токен (oauth_token).
 
 Необходимые для работы параметры можно получить зарегистрировав приложение вот тут https://oauth.yandex.ru/client/new.
-Как получить отладочный токен рассказано тут https://tech.yandex.ru/oauth/doc/dg/tasks/get-oauth-token-docpage/
+
+Доступ к API можно получить через [Отладочный токен](https://tech.yandex.ru/oauth/doc/dg/tasks/get-oauth-token-docpage/) или [Токен по коду, полученному автоматически](https://tech.yandex.ru/oauth/doc/dg/reference/auto-code-client-docpage/)
+
 
 Библиотека работает только с JSON форматом.
 
